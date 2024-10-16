@@ -174,6 +174,14 @@ func (h *Hub) Run() {
 	h.app.OnModelBeforeCreate("users").Add(h.um.InitializeUserRole)
 	h.app.OnModelBeforeCreate("user_settings").Add(h.um.InitializeUserSettings)
 
+	// empty info for systems that are paused
+	h.app.OnModelBeforeUpdate("systems").Add(func(e *core.ModelEvent) error {
+		if e.Model.(*models.Record).GetString("status") == "paused" {
+			e.Model.(*models.Record).Set("info", system.Info{})
+		}
+		return nil
+	})
+
 	// do things after a systems record is updated
 	h.app.OnModelAfterUpdate("systems").Add(func(e *core.ModelEvent) error {
 		newRecord := e.Model.(*models.Record)
@@ -307,7 +315,9 @@ func (h *Hub) updateSystem(record *models.Record) {
 		}
 	}
 	// system info alerts (todo: extra fs alerts)
-	h.am.HandleSystemAlerts(record, systemData.Info, systemData.Stats.Temperatures)
+	if err := h.am.HandleSystemAlerts(record, systemData.Info, systemData.Stats.Temperatures, systemData.Stats.ExtraFs); err != nil {
+		h.app.Logger().Error("System alerts error", "err", err.Error())
+	}
 }
 
 // set system to specified status and save record

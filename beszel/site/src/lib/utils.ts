@@ -7,6 +7,8 @@ import { RecordModel, RecordSubscription } from 'pocketbase'
 import { WritableAtom } from 'nanostores'
 import { timeDay, timeHour } from 'd3-time'
 import { useEffect, useState } from 'react'
+import { CpuIcon, HardDriveIcon, MemoryStickIcon } from 'lucide-react'
+import { EthernetIcon, ThermometerIcon } from '@/components/ui/icons'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -52,7 +54,7 @@ export const updateSystemList = async () => {
 
 export const updateAlerts = () => {
 	pb.collection('alerts')
-		.getFullList<AlertRecord>({ fields: 'id,name,system,value,min' })
+		.getFullList<AlertRecord>({ fields: 'id,name,system,value,min,triggered', sort: 'updated' })
 		.then((records) => {
 			$alerts.set(records)
 		})
@@ -295,3 +297,36 @@ export const getSizeAndUnit = (n: number, isGigabytes = true) => {
 }
 
 export const chartMargin = { top: 12 }
+
+export const alertInfo = {
+	CPU: {
+		name: 'CPU usage',
+		unit: '%',
+		icon: CpuIcon,
+		desc: 'Triggers when CPU usage exceeds a threshold.',
+	},
+	Memory: {
+		name: 'Memory usage',
+		unit: '%',
+		icon: MemoryStickIcon,
+		desc: 'Triggers when memory usage exceeds a threshold.',
+	},
+	Disk: {
+		name: 'Disk usage',
+		unit: '%',
+		icon: HardDriveIcon,
+		desc: 'Triggers when usage of any disk exceeds a threshold.',
+	},
+	Bandwidth: {
+		name: 'Bandwidth',
+		unit: ' MB/s',
+		icon: EthernetIcon,
+		desc: 'Triggers when combined up/down exceeds a threshold.',
+	},
+	Temperature: {
+		name: 'Temperature',
+		unit: '°C',
+		icon: ThermometerIcon,
+		desc: 'Triggers when any sensor exceeds a threshold.',
+	},
+}
